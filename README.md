@@ -5,6 +5,8 @@ A command-line tool to layout card game prototypes
 1. Clone the repo to someplace convenient
 2. Change directories to the root of the repo
 3. execute "pip install ."
+   - note: prototype-layout-tool depends on reportlab, which will be
+     installed automatically by pip
 4. execute "plt.py --help" for a usage message
 
 -- Example --
