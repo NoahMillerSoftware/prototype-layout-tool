@@ -59,12 +59,21 @@ JUMBO_L = {'card_dim' : (3.34090909*inch, 5.25*inch),
            'card_rots' : [90, 90, 90, 90]}
 JUMBO_L['anchors'] = [(inch*a[0], inch*a[1]) for a in JUMBO_L['anchors']]
 
-LARGE_SQUARE = {'card_dim' : (4*inch, 4*inch),
+SQUARE_4_INCH = {'card_dim' : (4*inch, 4*inch),
                 'anchors' : [(2.25, 7.5), (6.25, 7.5),
                              (2.25, 3.5), (6.25, 3.5)],
                 'card_rots' : [0,0,0,0]}
-LARGE_SQUARE['anchors'] = [(inch*a[0], inch*a[1]) for a in LARGE_SQUARE['anchors']]
+SQUARE_4_INCH['anchors'] = [(inch*a[0], inch*a[1]) for a in SQUARE_4_INCH['anchors']]
 
+SQUARE_2_INCH = {
+    'card_dim' : (2*inch, 2*inch),
+    'anchors' : [(1.25,9.5), (3.25,9.5), (5.25,9.5), (7.25,9.5),
+                 (1.25,7.5), (3.25,7.5), (5.25,7.5), (7.25,7.5),
+                 (1.25,5.5), (3.25,5.5), (5.25,5.5), (7.25,5.5),
+                 (1.25,3.5), (3.25,3.5), (5.25,3.5), (7.25,3.5),
+                 (1.25,1.5), (3.25,1.5), (5.25,1.5), (7.25,1.5)],
+    'card_rots' : [0]*20}
+SQUARE_2_INCH['anchors'] = [(inch*a[0], inch*a[1]) for a in SQUARE_2_INCH['anchors']]
 
 def read_specs(spec_filename):
     with open(spec_filename, 'r') as csvfile:
