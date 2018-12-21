@@ -75,6 +75,13 @@ SQUARE_2_INCH = {
     'card_rots' : [0]*20}
 SQUARE_2_INCH['anchors'] = [(inch*a[0], inch*a[1]) for a in SQUARE_2_INCH['anchors']]
 
+SQUARE_2_5_INCH = {'card_dim' : (2.5*inch, 2.5*inch),
+           'anchors' : [(1.75, 9)  , (4.25, 9)  , (6.75, 9),
+                        (1.75, 5.5), (4.25, 5.5), (6.75, 5.5),
+                        (1.75, 2)  , (4.25, 2)  , (6.75, 2)],
+           'card_rots' : [0,0,0,0,0,0,0,0,0]}
+SQUARE_2_5_INCH['anchors'] = [(inch*a[0], inch*a[1]) for a in SQUARE_2_5_INCH['anchors']]
+
 def read_specs(spec_filename):
     with open(spec_filename, 'r') as csvfile:
         reader = csv.reader(csvfile)
@@ -185,18 +192,32 @@ class Card(object):
             textobject.setFillColorRGB(0.35, 0.35, 0.45) # cool dark grey
             text_posn_abs = [d*t for d,t in zip(self.dim, section.posn)]
             textobject.setTextOrigin(*text_posn_abs)
+
+            if 'bottom' in section.alignment:
+                y_offset = len(section.text_list) * -font_size
+            elif 'middle' in section.alignment:
+                y_offset = len(section.text_list) * -font_size/2
+            else: # elif 'top' in section.alignment:
+                y_offset = 0
+
+            textobject.moveCursor(0,font_size/1.4)
+            textobject.moveCursor(0, y_offset)
+
             for text in section.text_list:
                 text_width = c.stringWidth(text, font_name, font_size)
-                if section.alignment == 'left':
-                    x_offset = 0
-                elif section.alignment == 'right':
+                if 'right' in section.alignment:
                     x_offset = -text_width
-                elif section.alignment == 'center':
+                elif 'center' in section.alignment:
                     x_offset = -text_width/2
+                else: # elif 'left' in section.alignment:
+                    x_offset = 0
 
                 textobject.moveCursor(x_offset, 0)
                 textobject.textOut(text)
                 textobject.moveCursor(-x_offset, font_size)
+
+            textobject.moveCursor(0, -y_offset)
+            textobject.moveCursor(0, -font_size/1.4)
 
             c.drawText(textobject)
 
@@ -205,7 +226,7 @@ class Card(object):
 
 class Section(object):
     def __init__(self, text, spec):
-        self.alignment = 'left'
+        self.alignment = 'bottomleft'
         self.font_size = 10
         self.font_name = 'Helvetica'
         self.posn = spec[:2]
@@ -220,7 +241,7 @@ class Section(object):
                           for item in sublist]
 
         if len(spec) > 3:
-            self.alignment = spec[3]
+            self.alignment = spec[3].lower()
         if len(spec) > 4:
             self.font_size = spec[4]
         if len(spec) > 5:
