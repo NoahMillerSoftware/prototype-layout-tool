@@ -91,16 +91,21 @@ def read_specs(spec_filename):
     line_list = []
     rect_list = []
     section_specs = []
-    bg_image = None
+    background = None
     for spec in specs:
         print(spec)
         if spec[0] == '' or spec[0][0] == '#': continue
         elif spec[0] == 'layout':
             layout = eval(spec[1].upper())
         elif spec[0] == 'bg_image':
-            bg_image = spec[1]
+            bg_filename = spec[1]
+            if len(spec) > 2 and spec[2] != '':
+                bg_spec = eval(spec[2])
+            else:
+                bg_spec = None
+            background = Background(bg_filename, bg_spec)
         elif spec[0] == 'no_bg_image':
-            bg_image = None
+            background = None
         elif spec[0] == 'lines':
             for l in spec[1:]:
                 if not l: continue
@@ -126,7 +131,7 @@ def read_specs(spec_filename):
             for i in range(num_copies):
                 card_list.append(
                     Card(layout['card_dim'],
-                         bg_image,
+                         background,
                          section_list,
                          line_list,
                          rect_list)
@@ -152,10 +157,10 @@ def draw_cards(card_list, filename, layout):
 
 
 class Card(object):
-    def __init__(self, dim, bg_image=None,
+    def __init__(self, dim, background=None,
                  section_list=(), line_list=(), rect_list=()):
         self.dim = dim
-        self.bg_image = bg_image
+        self.bg = background
         self.section_list = section_list
         self.line_list = line_list
         self.rect_list = rect_list
@@ -165,13 +170,22 @@ class Card(object):
 
         # translate and rotate
         c.translate(*anchor)
-        #c.translate(*[x/2 for x in self.dim])
         c.rotate(rot)
         c.translate(*[-x/2 for x in self.dim])
 
         # draw background image
-        if self.bg_image:
-            c.drawImage(self.bg_image, 0, 0, *self.dim)
+        if self.bg:
+            c.saveState()
+            p = c.beginPath()
+            p.rect(0,0,*self.dim)
+            c.clipPath(p, stroke=0)
+            c.drawImage(self.bg.image,
+                        self.bg.x_offset,
+                        self.bg.y_offset,
+                        self.dim[0]*self.bg.x_scale,
+                        self.dim[1]*self.bg.y_scale,
+                        mask='auto')
+            c.restoreState()
             
         # draw lines
         for line in self.line_list:
@@ -246,3 +260,18 @@ class Section(object):
             self.font_size = spec[4]
         if len(spec) > 5:
             self.font_name = spec[5]
+
+
+class Background(object):
+    def __init__(self, filename, spec=None):
+        self.image = filename
+        if spec:
+            (self.x_offset,
+             self.y_offset,
+             self.x_scale,
+             self.y_scale) = spec
+        else:
+            (self.x_offset,
+             self.y_offset,
+             self.x_scale,
+             self.y_scale) = (0,0,1,1)
