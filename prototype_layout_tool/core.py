@@ -221,7 +221,7 @@ class Card(object):
                 pdfmetrics.registerFont(TTFont(f, '{0}.ttf'.format(f)))
         for section in self.section_list:
             c.saveState() # to draw section
-            c.translate(*anchor)
+            c.translate(*[x/2 for x in self.dim])
             c.rotate(section.rot)
             c.translate(*[-x/2 for x in self.dim])
 
