@@ -10,6 +10,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 # anchors are center of each card
+# CHANGE FROM WAID
 
 # 3x3 poker cards on 8.5"x11" paper
 POKER_9 = {'page' : letter,
