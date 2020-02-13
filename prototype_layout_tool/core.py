@@ -10,7 +10,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 # anchors are center of each card
-# CHANGE FROM WAID
 
 # 3x3 poker cards on 8.5"x11" paper
 POKER_9 = {'page' : letter,
@@ -62,7 +61,7 @@ JUMBO = {'page' : letter,
 JUMBO['anchors'] = [(inch*a[0], inch*a[1]) for a in JUMBO['anchors']]
 
 JUMBO_L = {'page' : letter,
-           'card_dim' : (3.34090909*inch, 5.25*inch),
+           'card_dim' : (5.25*inch, 3.34090909*inch),
            'anchors' : [(2.5795455, 8.125), (5.9204546, 8.125),
                         (2.5795455, 2.875), (5.9204546, 2.875)],
            'card_rots' : [90, 90, 90, 90]}
