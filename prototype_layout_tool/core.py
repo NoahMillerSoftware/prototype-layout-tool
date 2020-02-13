@@ -208,7 +208,12 @@ class Card(object):
             c.line(*line_abs)
 
         # draw rectangles
-        for rect in self.rect_list:
+        for rect_spec in self.rect_list:
+            # convert from (x1,y1,w1,h1) to (x1,y1,x2,y2)
+            rect = (rect_spec[0],
+                    rect_spec[1],
+                    rect_spec[2] - rect_spec[0],
+                    rect_spec[3] - rect_spec[1])
             rect_abs = [d*r for d,r in zip(self.dim*2, rect)]
             print(rect_abs)
             c.rect(*rect_abs)
