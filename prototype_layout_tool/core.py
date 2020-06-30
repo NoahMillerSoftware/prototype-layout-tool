@@ -106,14 +106,29 @@ def read_specs(spec_filename):
     card_list = []
     line_list = []
     rect_list = []
+    ellipse_list = []
+    curve_list = []
     section_specs = []
     background = None
+    reset_lists = False
     for spec in specs:
         print(spec)
         if spec[0] == '' or spec[0][0] == '#': continue
         elif spec[0] == 'layout':
+            if reset_lists:
+                line_list = []
+                rect_list = []
+                ellipse_list = []
+                curve_list = []
+                reset_lists = False
             layout = eval(spec[1].upper())
         elif spec[0] == 'bg_image':
+            if reset_lists:
+                line_list = []
+                rect_list = []
+                ellipse_list = []
+                curve_list = []
+                reset_lists = False
             bg_filename = spec[1]
             if len(spec) > 2 and spec[2] != '':
                 bg_spec = eval(spec[2])
@@ -121,21 +136,58 @@ def read_specs(spec_filename):
                 bg_spec = None
             background = Background(bg_filename, bg_spec)
         elif spec[0] == 'no_bg_image':
+            if reset_lists:
+                line_list = []
+                rect_list = []
+                ellipse_list = []
+                curve_list = []
+                reset_lists = False
             background = None
-        elif spec[0] == 'lines':
-            for l in spec[1:]:
-                if not l: continue
-                line_list.append(eval(l))
-        elif spec[0] == 'rects':
-            for r in spec[1:]:
-                if not r: continue
-                rect_list.append(eval(r))
+        elif spec[0] == 'line':
+            if reset_lists:
+                line_list = []
+                rect_list = []
+                ellipse_list = []
+                curve_list = []
+                reset_lists = False
+            line_list.append([eval(r) if r else None for r in spec[1:]])
+        elif spec[0] == 'rect':
+            if reset_lists:
+                line_list = []
+                rect_list = []
+                ellipse_list = []
+                curve_list = []
+                reset_lists = False
+            rect_list.append([eval(r) if r else None for r in spec[1:]])
+        elif spec[0] == 'ellipse':
+            if reset_lists:
+                line_list = []
+                rect_list = []
+                ellipse_list = []
+                curve_list = []
+                reset_lists = False
+            ellipse_list.append([eval(r) if r else None for r in spec[1:]])
+        elif spec[0] == 'curve':
+            if reset_lists:
+                line_list = []
+                rect_list = []
+                ellipse_list = []
+                curve_list = []
+                reset_lists = False
+            curve_list.append([eval(r) if r else None for r in spec[1:]])
         elif spec[0] == 'text':
+            if reset_lists:
+                line_list = []
+                rect_list = []
+                ellipse_list = []
+                curve_list = []
+                reset_lists = False
             section_specs = []
             for i in range(1,len(spec)):
                 if not spec[i]: continue
                 section_specs.append(eval(spec[i]))
         else:
+            reset_lists = True
             num_copies = eval(spec[0])
             section_list = []
             for i in range(1, len(section_specs)+1):
@@ -150,7 +202,9 @@ def read_specs(spec_filename):
                          background,
                          section_list,
                          line_list,
-                         rect_list)
+                         rect_list,
+                         ellipse_list,
+                         curve_list)
                 )
     return (card_list, layout)
                 
@@ -174,12 +228,14 @@ def draw_cards(card_list, filename, layout):
 
 class Card(object):
     def __init__(self, dim, background=None,
-                 section_list=(), line_list=(), rect_list=()):
+                 section_list=(), line_list=(), rect_list=(), ellipse_list=(), curve_list=()):
         self.dim = dim
         self.bg = background
         self.section_list = section_list
         self.line_list = line_list
         self.rect_list = rect_list
+        self.ellipse_list = ellipse_list
+        self.curve_list = curve_list
 
     def draw(self, c, anchor, rot):
         # translate and rotate
@@ -203,20 +259,90 @@ class Card(object):
             c.restoreState() # background image complete
             
         # draw lines
-        for line in self.line_list:
-            line_abs = [d*l for d,l in zip(self.dim*2, line)]
+        for line_spec in self.line_list:
+            c.saveState()
+            p = c.beginPath()
+            p.rect(0,0,*self.dim)
+            c.clipPath(p, stroke=0)
+            if len(line_spec) > 0 and line_spec[0]:
+                line_coord = line_spec[0]
+                line_abs = [d*l for d,l in zip(self.dim*2, line_coord)]
+            else:
+                # coord is mandatory, so if missing, don't process rest of the spec
+                c.restoreState()
+                continue
+            if len(line_spec) > 1 and line_spec[1]:
+                c.setLineWidth(line_spec[1])
+            if len(line_spec) > 2 and line_spec[2]:
+                c.setDash(*line_spec[2])
             c.line(*line_abs)
+            c.restoreState()
 
         # draw rectangles
         for rect_spec in self.rect_list:
+            c.saveState()
+            p = c.beginPath()
+            p.rect(0,0,*self.dim)
+            c.clipPath(p, stroke=0)
             # convert from (x1,y1,w1,h1) to (x1,y1,x2,y2)
-            rect = (rect_spec[0],
-                    rect_spec[1],
-                    rect_spec[2] - rect_spec[0],
-                    rect_spec[3] - rect_spec[1])
-            rect_abs = [d*r for d,r in zip(self.dim*2, rect)]
-            print(rect_abs)
+            if len(rect_spec) > 0 and rect_spec[0]:
+                rect_coord = rect_spec[0]
+                rect = (rect_coord[0],
+                        rect_coord[1],
+                        rect_coord[2] - rect_coord[0],
+                        rect_coord[3] - rect_coord[1])
+                rect_abs = [d*r for d,r in zip(self.dim*2, rect)]
+                print(rect_abs)
+            else:
+                # coord is mandatory, so if missing, don't process rest of the spec
+                c.restoreState()
+                continue
+            if len(rect_spec) > 1 and rect_spec[1]:
+                c.setLineWidth(rect_spec[1])
+            if len(rect_spec) > 2 and rect_spec[2]:
+                c.setDash(*rect_spec[2])
             c.rect(*rect_abs)
+            c.restoreState()
+
+        # draw ellipses
+        for ellipse_spec in self.ellipse_list:
+            c.saveState()
+            p = c.beginPath()
+            p.rect(0,0,*self.dim)
+            c.clipPath(p, stroke=0)
+            if len(ellipse_spec) > 0 and ellipse_spec[0]:
+                ellipse_coord = ellipse_spec[0]
+                ellipse_abs = [d*e for d,e in zip(self.dim*2, ellipse_coord)]
+            else:
+                # coord is mandatory, so if missing, don't process rest of the spec
+                c.restoreState()
+                continue
+            if len(ellipse_spec) > 1 and ellipse_spec[1]:
+                c.setLineWidth(ellipse_spec[1])
+            if len(ellipse_spec) > 2 and ellipse_spec[2]:
+                c.setDash(*ellipse_spec[2])
+            c.ellipse(*ellipse_abs)
+            c.restoreState()
+
+        # draw bezier curves
+        for curve_spec in self.curve_list:
+            c.saveState()
+            p = c.beginPath()
+            p.rect(0,0,*self.dim)
+            c.clipPath(p, stroke=0)
+            if len(curve_spec) > 0 and curve_spec[0]:
+                curve_coord = curve_spec[0]
+                curve_abs = [d*c for d,c in zip(self.dim*4, curve_coord)]
+            else:
+                # coord is mandatory, so if missing, don't process rest of the spec
+                c.restoreState()
+                continue
+            if len(curve_spec) > 1 and curve_spec[1]:
+                c.setLineWidth(curve_spec[1])
+            if len(curve_spec) > 2 and curve_spec[2]:
+                c.setDash(*curve_spec[2])
+            c.bezier(*curve_abs)
+            c.restoreState()
 
         # draw text sections
         registered_fonts = c.getAvailableFonts()
